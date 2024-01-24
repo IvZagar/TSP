@@ -112,7 +112,6 @@ def modified_tournament_selection_and_crossover(
     # Take the first two items (highest values) and extract their indices
     highest_indices = [item[0] for item in sorted_solutions[:2]]
 
-    print(highest_indices)
     new_population = []
     new_population.append(population[highest_indices[0]])
     new_population.append(population[highest_indices[1]])
@@ -139,13 +138,12 @@ def modified_tournament_selection_and_crossover(
         child1, child2 = crossover(parent1[1], parent2[1])
 
         chosen_child = random.choice([child1, child2])
+        mutant = mutate_tree(chosen_child, mutation_rate)
 
-        if chosen_child not in [p[1] for p in new_population] and tsp_route_finder(
-            points, k, chosen_child
+        if mutant not in [p[1] for p in new_population] and tsp_route_finder(
+            points, k, mutant
         ) not in [p[0] for p in new_population]:
-            new_population.append(
-                (tsp_route_finder(points, k, chosen_child), chosen_child)
-            )
+            new_population.append((tsp_route_finder(points, k, mutant), mutant))
             population_size -= 1
 
     new_fitnesses = []

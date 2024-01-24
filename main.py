@@ -4,9 +4,8 @@ from tsp_generate_tree import *
 from tsp_genetic_alghoritm import *
 import matplotlib.pyplot as plt
 
-
 folder_path = r"C:\Users\ivanz\OneDrive\Desktop\TSP\tsp_points"
-file_path = r"C:\Users\ivanz\OneDrive\Desktop\TSP\tsp_points\points_2.txt"
+file_path = r"C:\Users\ivanz\OneDrive\Desktop\TSP\tsp_points\points_0.txt"
 x_range = (1, 99)
 y_range = (1, 99)
 num_points = 50
@@ -41,7 +40,7 @@ def tsp_plot_route(ax, points, tour, color="b", alpha=1.0, linewidth=1.0):
     ax.set_title("TSP Tour")
     ax.set_xlabel("X-coordinate")
     ax.set_ylabel("Y-coordinate")
-    ax.grid(True)
+    ax.grid(False)
 
 
 def main():
@@ -49,10 +48,9 @@ def main():
     fig, ax = plt.subplots()
 
     population_size = 10
-    generations = 100
+    generations = 1000
     mutation_rate = 0.05
     points = tsp_read_points(file_path)
-
     population = []
     while population_size:
         tree = random_expression_tree(3, function_set, terminal_set)
@@ -89,7 +87,7 @@ def main():
 
         ax.clear()
         for route in all_routes:
-            tsp_plot_route(ax, points, route, color="grey", alpha=0.3, linewidth=0.5)
+            tsp_plot_route(ax, points, route, color="grey", alpha=0.1, linewidth=0.2)
 
         tsp_plot_route(ax, points, best_tour, color="#006400", alpha=1.0, linewidth=1.5)
         ax.set_title(f"Generation {gen + 1}: Best Fitness = {best_fitness}")
