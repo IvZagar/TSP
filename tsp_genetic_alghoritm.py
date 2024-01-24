@@ -51,7 +51,7 @@ def crossover(tree1, tree2):
 
 def mutate_tree(node, mutation_rate=0.05, max_depth=8, current_depth=0):
     if current_depth >= max_depth:
-        return  # Stop the recursion if maximum depth is reached
+        return  
 
     if random.random() < mutation_rate:
         if node.left or node.right:
@@ -106,10 +106,7 @@ def modified_tournament_selection_and_crossover(
 
     enumerated_solutions = list(enumerate(fitnesses))
 
-    # Sort the list in descending order based on values
     sorted_solutions = sorted(enumerated_solutions, key=lambda x: x[1], reverse=False)
-
-    # Take the first two items (highest values) and extract their indices
     highest_indices = [item[0] for item in sorted_solutions[:2]]
 
     new_population = []

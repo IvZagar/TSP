@@ -5,7 +5,7 @@ from tsp_genetic_alghoritm import *
 import matplotlib.pyplot as plt
 
 folder_path = r"C:\Users\ivanz\OneDrive\Desktop\TSP\tsp_points"
-file_path = r"C:\Users\ivanz\OneDrive\Desktop\TSP\tsp_points\points_0.txt"
+file_path = r"C:\Users\ivanz\OneDrive\Desktop\TSP\tsp_points\points_2.txt"
 x_range = (1, 99)
 y_range = (1, 99)
 num_points = 50
@@ -49,7 +49,7 @@ def main():
 
     population_size = 10
     generations = 1000
-    mutation_rate = 0.05
+    mutation_rate = 0.15
     points = tsp_read_points(file_path)
     population = []
     while population_size:
