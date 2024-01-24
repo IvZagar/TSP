@@ -3,6 +3,80 @@ from tsp_generate_tree import *
 import random
 
 
+def get_random_node(root):
+    nodes = []
+    stack = [root]
+    while stack:
+        node = stack.pop()
+        nodes.append(node)
+        if node.left:
+            stack.append(node.left)
+        if node.right:
+            stack.append(node.right)
+    return random.choice(nodes)
+
+
+# OK
+def calculate_depth(root):
+    if root is None:
+        return -1
+    else:
+        left_depth = calculate_depth(root.left)
+        right_depth = calculate_depth(root.right)
+        return max(left_depth, right_depth) + 1
+
+
+def crossover(tree1, tree2):
+    original_tree1 = deepcopy(tree1)
+    original_tree2 = deepcopy(tree2)
+
+    node1 = get_random_node(original_tree1)
+    node2 = get_random_node(original_tree2)
+
+    if node1.value in function_set and node2.value in function_set:
+        node1.left, node2.left = node2.left, node1.left
+        node1.right, node2.right = node2.right, node1.right
+    else:
+        return original_tree1, original_tree2
+
+    if tree1 == original_tree1 and tree2 == original_tree2:
+        return original_tree1, original_tree2
+
+    if calculate_depth(original_tree1) > 8 or calculate_depth(original_tree2) > 8:
+        crossover(original_tree1, original_tree2)
+    mutate_tree(original_tree1)
+    mutate_tree(original_tree2)
+    return original_tree1, original_tree2
+
+
+def mutate_tree(node, mutation_rate=0.05, max_depth=8, current_depth=0):
+    if current_depth >= max_depth:
+        return  # Stop the recursion if maximum depth is reached
+
+    if random.random() < mutation_rate:
+        if node.left or node.right:
+            if random.random() < mutation_rate:
+                if node.value in function_set:
+                    node.value = random.choice(function_set)
+                else:
+                    mutate_tree(
+                        random.choice([node.left, node.right]),
+                        mutation_rate,
+                        max_depth,
+                        current_depth + 1,
+                    )
+        else:
+            if node.value in function_set:
+                node.value = random.choice(function_set)
+
+    if node.left:
+        mutate_tree(node.left, mutation_rate, max_depth, current_depth + 1)
+    if node.right:
+        mutate_tree(node.right, mutation_rate, max_depth, current_depth + 1)
+
+    return node
+
+
 def calculate_fitness(route, points):
     total_distance = 0
 
@@ -14,109 +88,39 @@ def calculate_fitness(route, points):
     return total_distance
 
 
-def is_compatible(node1, node2):
-    return (node1.value in operators and node2.value in operators) or (
-        node1.value in terminals and node2.value in terminals
-    )
-
-
-def find_compatible_subtree(node, compatible_with):
-    compatible_subtrees = [
-        child for child in node.children if is_compatible(child, compatible_with)
-    ]
-    return random.choice(compatible_subtrees) if compatible_subtrees else None
-
-
-def tree_depth(node):
-    if not node.children:
-        return 1
-    return 1 + max(tree_depth(child) for child in node.children)
-
-
-def mutate_tree(node, mutation_rate, max_depth=8, current_depth=0):
-    if current_depth >= max_depth:
-        return  # Stop the recursion if maximum depth is reached
-
-    if random.random() < mutation_rate:
-        if node.children:
-            mutate_tree(
-                random.choice(node.children),
-                mutation_rate,
-                max_depth,
-                current_depth + 1,
-            )
-        else:
-            if node.value in operators:
-                node.value = random.choice(list(operators.keys()))
-            elif node.value in terminals:
-                node.value = random.choice(terminals)
-
-    for child in node.children:
-        mutate_tree(child, mutation_rate, max_depth, current_depth + 1)
-
-    return node
-
-
-def crossover(parent1, parent2, max_depth=8):
-    subtree1 = select_random_subtree(parent1)
-    subtree2 = select_random_subtree(parent2)
-
-    if tree_depth(subtree1) + tree_depth(subtree2) > max_depth:
-        return parent1, parent2
-
-    if not is_compatible(subtree1, subtree2):
-        return parent1, parent2
-
-    replace_subtree(parent1, subtree1, subtree2)
-    replace_subtree(parent2, subtree2, subtree1)
-
-    return parent1, parent2
-
-
-def select_random_subtree(tree):
-    all_subtrees = get_all_subtrees(tree)
-    return random.choice(all_subtrees)
-
-
-def get_all_subtrees(node):
-    subtrees = [node]
-    for child in node.children:
-        subtrees.extend(get_all_subtrees(child))
-    return subtrees
-
-
-def replace_subtree(tree, subtree_to_replace, new_subtree):
-    if tree == subtree_to_replace:
-        copy_attributes(new_subtree, tree)
+def deepcopy(root):
+    if root is None:
+        return None
     else:
-        for i, child in enumerate(tree.children):
-            if child == subtree_to_replace:
-                tree.children[i] = new_subtree
-                return
-            replace_subtree(child, subtree_to_replace, new_subtree)
-
-
-def copy_attributes(source_node, target_node):
-    target_node.value = source_node.value
-    target_node.children = source_node.children
+        new_root = Node(root.value)
+        new_root.left = deepcopy(root.left)
+        new_root.right = deepcopy(root.right)
+        return new_root
 
 
 def modified_tournament_selection_and_crossover(
     population, points, mutation_rate, fitnesses, k
 ):
     population_size = len(population)
+    ran = population_size - 1
 
-    best_indices = sorted(range(population_size), key=lambda i: fitnesses[i])[:2]
-    best_individuals = [population[i] for i in best_indices]
+    enumerated_solutions = list(enumerate(fitnesses))
 
-    new_population = [None] * population_size
-    new_population[0:2] = best_individuals
+    # Sort the list in descending order based on values
+    sorted_solutions = sorted(enumerated_solutions, key=lambda x: x[1], reverse=False)
 
-    for i in range(2, population_size):
+    # Take the first two items (highest values) and extract their indices
+    highest_indices = [item[0] for item in sorted_solutions[:2]]
+
+    print(highest_indices)
+    new_population = []
+    new_population.append(population[highest_indices[0]])
+    new_population.append(population[highest_indices[1]])
+    while population_size - 2:
         tournament_indices = []
         j = 3
         while j > 0:
-            indice = random.randint(0, population_size - 1)
+            indice = random.randint(0, ran)
             if indice not in tournament_indices:
                 tournament_indices.append(indice)
                 j -= 1
@@ -132,18 +136,20 @@ def modified_tournament_selection_and_crossover(
             population[tournament_indices[1]],
         )
 
-        child1, child2 = crossover(parent1, parent2)
-
-        child1 = mutate_tree(child1, mutation_rate)
-        child2 = mutate_tree(child2, mutation_rate)
+        child1, child2 = crossover(parent1[1], parent2[1])
 
         chosen_child = random.choice([child1, child2])
-        new_population[i] = chosen_child
 
-    new_route = [tsp_solver(points, k, individual) for individual in new_population]
+        if chosen_child not in [p[1] for p in new_population] and tsp_route_finder(
+            points, k, chosen_child
+        ) not in [p[0] for p in new_population]:
+            new_population.append(
+                (tsp_route_finder(points, k, chosen_child), chosen_child)
+            )
+            population_size -= 1
 
     new_fitnesses = []
+    for pop in new_population:
+        new_fitnesses.append(calculate_fitness(pop[0], points))
 
-    for ja in new_route:
-        new_fitnesses.append(calculate_fitness(ja, points))
     return new_population, new_fitnesses
